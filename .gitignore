@@ -1,0 +1,17 @@
+# Python artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+*.py[cod]
+__pycache__/
+.coverage
+
+# Python envs
+.venv/
+
+# Custom environment variables
+.env
+
+# Project related artifacts
+downloads/
