@@ -1,4 +1,8 @@
-# Python artifacts
+## Directories following LFS convention
+var/
+tmp/
+
+## Python build and test artifacts
 build/
 dist/
 *.egg-info/
@@ -7,11 +11,10 @@ dist/
 __pycache__/
 .coverage
 
-# Python envs
+## Common Python virtual environment prefixes
+.env/
 .venv/
 
-# Custom environment variables
+## Common convention files excluded from git repositories
 .env
 
-# Project related artifacts
-downloads/
