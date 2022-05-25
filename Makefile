@@ -1,16 +1,21 @@
-.PHONY: help clean clean-build clean-pyc clean-test lint-check lint-fix lint-black-check lint-black-fix lint-flake8-check test test-unit test-integration test-blackbox test-tox install-dev build install
+.PHONY: _help help clean clean-build clean-pyc clean-test lint-check lint-fix lint-black-check lint-black-fix lint-flake8-check test test-unit test-integration test-blackbox test-tox install-dev build install
 .DEFAULT_GOAL := help
 
-define PRINT_HELP_PYSCRIPT
-import re, sys
+# Ensure make version
+ifneq (4.2,$(firstword $(sort $(MAKE_VERSION) 4.2)))
+	$(error "Please install GNU Make v4.2+ along with GNU coreutils.")
+endif
 
-for line in sys.stdin:
-	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
-	if match:
-		target, help = match.groups()
-		print("%-20s %s" % (target, help))
-endef
-export PRINT_HELP_PYSCRIPT
+help: ## Show this help
+help: _cmd_prefix= [^_]+
+help: _help
+
+_help:
+	@awk 'BEGIN {FS = ":.*?## "} \
+	/^$(_cmd_prefix)[0-9a-zA-Z_-]+$(_cmd_suffix):.*?##/ \
+	{printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | \
+	sed -E 's/@([0-9a-zA-Z_-]+)/\@\1/g' | \
+	sort
 
 PIP    = python -m pip
 BLACK  = python -m black
@@ -24,9 +29,6 @@ PYTEST_FLAGS = -v --cov={{package}}
 
 BUILD_DIR = build
 SOURCE_DIR = {{package}}
-
-help:
-	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
