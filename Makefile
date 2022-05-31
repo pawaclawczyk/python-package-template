@@ -7,7 +7,7 @@ ifneq (4.2,$(firstword $(sort $(MAKE_VERSION) 4.2)))
 endif
 
 help: ## Show this help
-help: _cmd_prefix= [^_]+
+help: _cmd_prefix = [^_]+
 help: _help
 
 _help:
@@ -17,74 +17,88 @@ _help:
 	sed -E 's/@([0-9a-zA-Z_-]+)/\@\1/g' | \
 	sort
 
-PIP    = python -m pip
-BLACK  = python -m black
-FLAKE8 = python -m flake8
-PYTEST = python -m pytest
-TOX    = python -m tox
-BUILD  = python -m build
+PROJECT    = python_package_template
+BUILD_DIR  = build
+SOURCE_DIR = $(PROJECT)
 
-FLAKE8_FLAGS = --count --show-source --statistics
-PYTEST_FLAGS = -v --cov={{package}}
+PYTHON = python
 
-BUILD_DIR = build
-SOURCE_DIR = {{package}}
+PIP    = $(PYTHON) -m pip
+BLACK  = $(PYTHON) -m black
+FLAKE8 = $(PYTHON) -m flake8
+PYTEST = $(PYTHON) -m pytest
+TOX    = $(PYTHON) -m tox
+BUILD  = $(PYTHON) -m build
 
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+PYTEST_FLAGS = -v --cov=$(SOURCE_DIR)
 
-clean-build: ## remove build artifacts
+__env_dir = var/envs/work
+__activate_env = source $(__env_dir)/bin/activate &&
+
+$(__env_dir):
+	$(PYTHON) -m venv $@
+	touch $@
+
+clean: ## remove all development and runtime artifacts
+clean: clean/build clean/env clean/pyc clean/test
+
+clean/build: ## remove build artifacts
 	rm -fr build/
 	rm -fr dist/
 	rm -fr .eggs/
 	find . -name '*.egg-info' -exec rm -fr {} +
 	find . -name '*.egg' -exec rm -f {} +
 
-clean-pyc: ## remove Python file artifacts
+clean/env: ## remove environments
+	rm -fr .venv/
+	rm -fr var/envs/
+
+clean/pyc: ## remove Python artifacts
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
 
-clean-test: ## remove test and coverage artifacts
+clean/test: ## remove test and coverage artifacts
 	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
 	rm -fr .pytest_cache
 
-lint-check: lint-black-check lint-flake8-check ## run all linters and notify about violations
+lint: ## run linters
+lint: lint/black lint/flake8
 
-lint-fix: lint-black-fix ## run all linters and fix the violations
+lint/black: $(__env_dir)
+lint/black: ## run black linter
+	$(__activate_env) $(BLACK) --check --diff --color $(SOURCE_DIR)
 
-lint-black-check: ## run black and notify about violations
-	$(BLACK) --check --diff --color $(SOURCE_DIR)
+lint/flake8: $(__env_dir)
+lint/flake8: ## run flake8 linter
+	$(__activate_env) $(FLAKE8) --count --show-source --statistics $(SOURCE_DIR)
 
-lint-black-fix: ## run black and fix the violations
-	$(BLACK) $(SOURCE_DIR)
+fmt: ## run formatters
+fmt: fmt/black
 
-lint-flake8-check: ## run flake8 and notify about violations
-	$(FLAKE8) $(FLAKE8_FLAGS) $(SOURCE_DIR)
+fmt/black: $(__env_dir)
+fmt/black: ## run black formatter
+	$(__activate_env) $(BLACK) $(SOURCE_DIR)
 
-test: test-unit test-integration ## run all test suits
+test: test/unit test/integration test/blackbox ## run all test suites
 
-test-unit: ## run unit test suit
-	$(PYTEST) $(PYTEST_FLAGS) -m "not (integration or blackbox)"
+test/unit: $(__env_dir)
+test/unit: ## run unit test suites
+	$(__activate_env) $(PYTEST) $(PYTEST_FLAGS) -m "not (integration or blackbox)"
 
-test-integration: ## run integration test suite
-	$(PYTEST) $(PYTEST_FLAGS) -m "integration"
+test/integration: $(__env_dir)
+test/integration: ## run integration test suites
+	$(__activate_env) $(PYTEST) $(PYTEST_FLAGS) -m "integration"
 
-test-blackbox: clean build install ## run blackbox tests
-	$(PYTEST) $(PYTEST_FLAGS) -m "blackbox"
+test/blackbox: clean build install ## run blackbox test suites
+	$(__activate_env) $(PYTEST) $(PYTEST_FLAGS) -m "blackbox"
 
-test-tox: clean ## run tests using different Python versions with tox
-	$(TOX)
+develop: $(__env_dir) ## set up development environment
+	$(__activate_env) $(PIP) install --force-reinstall -e ".[dev]"
 
-install-dev: clean ## install package for development
-	$(PIP) install --force-reinstall -e ".[dev]"
-
-build: clean ## build wheel package
-	$(BUILD) --wheel --outdir $(BUILD_DIR)
+build: $(__env_dir) ## build wheel package
+	$(__activate_env) $(BUILD) --wheel --outdir $(BUILD_DIR)
 	ls -l $(BUILD_DIR)
-
-install:
-	$(PIP) install --force-reinstall $(BUILD_DIR)/*.whla
-

@@ -10,6 +10,7 @@ dist/
 *.py[cod]
 __pycache__/
 .coverage
+.pytest_cache/
 
 ## Common Python virtual environment prefixes
 .env/
@@ -17,4 +18,3 @@ __pycache__/
 
 ## Common convention files excluded from git repositories
 .env
-

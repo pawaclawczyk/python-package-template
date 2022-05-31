@@ -18,16 +18,17 @@ def read_requirements(name: str = "requirements.txt"):
 
 
 setup(
-    name="{{todo}},
+    # todo
+    name="python_package_template",
     # The application uses version number `0.0.0` to denote that it's in a pure development phase,
     # and there is no release management process in place.
-    version="0.0.0",
-    description="{{todo}}",
+    version="0+dev",
+    description="Python Package Template",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="{{todo}}",
-    author="{{todo}}",
-    author_email="{{todo}}",
+    url="",
+    author="Paweł Wacławczyk",
+    author_email="p.a.waclawczyk",
     # https://pypi.org/classifiers/
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
@@ -52,7 +53,7 @@ setup(
         "console_scripts": []
     },
     project_urls={
-        "Bug Reports": "{{here}}",
-        "Source": "{{here}}",
+        "Bug Reports": "",
+        "Source": "",
     },
 )
